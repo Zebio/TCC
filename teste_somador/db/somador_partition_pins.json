@@ -1,0 +1,49 @@
+{
+	"partitions" : [
+		{
+			"name" : "Top",
+			"pins" : [
+				{
+					"name" : "Soma_t",
+					"strict" : false
+				},
+				{
+					"name" : "Soma_f",
+					"strict" : false
+				},
+				{
+					"name" : "Cout_t",
+					"strict" : false
+				},
+				{
+					"name" : "Cout_f",
+					"strict" : false
+				},
+				{
+					"name" : "A_t",
+					"strict" : false
+				},
+				{
+					"name" : "A_f",
+					"strict" : false
+				},
+				{
+					"name" : "B_t",
+					"strict" : false
+				},
+				{
+					"name" : "Cin_t",
+					"strict" : false
+				},
+				{
+					"name" : "B_f",
+					"strict" : false
+				},
+				{
+					"name" : "Cin_f",
+					"strict" : false
+				}
+			]
+		}
+	]
+}

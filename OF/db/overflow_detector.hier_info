@@ -1,0 +1,23 @@
+|overflow_detector
+A_t => hysteresis.IN0
+A_t => OF_f.IN0
+A_t => OF_t.IN0
+A_f => hysteresis.IN1
+A_f => OF_f.IN0
+A_f => OF_t.IN0
+B_t => hysteresis.IN1
+B_t => OF_f.IN0
+B_t => OF_t.IN1
+B_f => hysteresis.IN1
+B_f => OF_f.IN1
+B_f => OF_t.IN1
+S_t => hysteresis.IN1
+S_t => OF_f.IN1
+S_t => OF_t.IN1
+S_f => hysteresis.IN1
+S_f => OF_f.IN1
+S_f => OF_t.IN1
+OF_t <= OF_t.DB_MAX_OUTPUT_PORT_TYPE
+OF_f <= OF_f.DB_MAX_OUTPUT_PORT_TYPE
+
+

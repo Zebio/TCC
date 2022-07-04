@@ -29,7 +29,7 @@ class Minterms(object):
     def simplify(self):
         prime_implicants = find_prime_implicants(self.minterms, self.not_cares)
         result = find_essential_prime_implicants(prime_implicants, self.minterms)
-        print(result)
+        #print(result)
         string2=""
         for i in result:
             string2=string2+str(i)+" "
@@ -41,20 +41,21 @@ class Minterms(object):
  
         #using loop
         #add the string character by character
-        for i in range(0,l-2):
+        for i in range(0,l-1):
             Final_string = Final_string + string2[i]
-        print(Final_string)
-        my_file_output = open("str_terms_file_output.txt", "w")
+        print(' Result(* = Not Care): ' + Final_string)
+        my_file_output = open("expression_file_output.txt", "w")
         my_file_output.write(Final_string)
         my_file_output.close()
 
 
 if __name__ == "__main__":
-    my_file = open("str_terms_file.txt", "r")
+    my_file = open("expression_file.txt", "r")
     data = my_file.read()
     str_terms = data.split(" ")
     #str_terms = ["010", "011", "101", "111"]
-    print(str_terms)
+    print('\n Python script to simplify boolean expressions')
+    print(' Expression: ' , str_terms)
     my_file.close()
     terms_not_care = []
     t_minterms = [Term(term) for term in str_terms]

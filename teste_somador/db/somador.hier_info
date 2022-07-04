@@ -1,0 +1,37 @@
+|Somador
+A_t => hysteresis.IN0
+A_t => Soma_t.IN0
+A_t => Soma_t.IN0
+A_t => Cout_t.IN0
+A_f => hysteresis.IN1
+A_f => Soma_t.IN0
+A_f => Soma_t.IN0
+A_f => Cout_f.IN0
+B_t => hysteresis.IN1
+B_t => Soma_t.IN1
+B_t => Soma_t.IN1
+B_t => Cout_t.IN0
+B_f => hysteresis.IN1
+B_f => Soma_t.IN1
+B_f => Soma_t.IN1
+B_f => Cout_f.IN0
+Cin_t => hysteresis.IN1
+Cin_t => Soma_f.IN1
+Cin_t => Soma_f.IN1
+Cin_t => Soma_t.IN1
+Cin_t => Soma_t.IN1
+Cin_t => Cout_t.IN1
+Cin_t => Cout_t.IN1
+Cin_f => hysteresis.IN1
+Cin_f => Soma_f.IN1
+Cin_f => Soma_f.IN1
+Cin_f => Soma_t.IN1
+Cin_f => Soma_t.IN1
+Cin_f => Cout_f.IN1
+Cin_f => Cout_f.IN1
+Soma_t <= Soma_t.DB_MAX_OUTPUT_PORT_TYPE
+Soma_f <= Soma_f.DB_MAX_OUTPUT_PORT_TYPE
+Cout_t <= Cout_t.DB_MAX_OUTPUT_PORT_TYPE
+Cout_f <= Cout_f.DB_MAX_OUTPUT_PORT_TYPE
+
+
