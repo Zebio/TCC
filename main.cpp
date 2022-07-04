@@ -5,344 +5,450 @@
 #include <direct.h>
 #include <cstring>
 
+#ifdef WINDOWS
+#include <direct.h>
+#define GetCurrentDir _getcwd
+#else
+#include <unistd.h>
+#define GetCurrentDir getcwd
+#endif
+
 using namespace std;
 
-int main()
+std::string get_current_dir() {
+   char buff[FILENAME_MAX]; //create string buffer to hold path
+   GetCurrentDir( buff, FILENAME_MAX );
+   string current_working_dir(buff);
+   return current_working_dir;
+}
+
+struct SignalExpression{
+    string signalName;
+    string falseExpression;
+    string trueExpression;
+};
+
+
+class NCL_circuit
 {
-    string nome_do_modulo;
-    int numero_de_entradas=0;
-    int numero_de_saidas  =0;
+private:
+    string name;
+    vector<string> inputs;
+    vector<string> outputs;
+    bool ** truthTable;
+    string hysteresys;
+    vector<SignalExpression> outputExpressions;
 
-
-    ifstream arquivo_da_tabela;
-    arquivo_da_tabela.open("tabela_verdade_of.txt");
-    string buffer;
-    if (arquivo_da_tabela.is_open())
+    bool ReadInputFile(string inputFileName)
     {
-        arquivo_da_tabela>>nome_do_modulo;
-        arquivo_da_tabela>>buffer;
-        numero_de_entradas = stoi(buffer);
-        arquivo_da_tabela>>buffer;
-        numero_de_saidas = stoi(buffer);
-    }
-
-    cout<<"Nome: "<<nome_do_modulo<<" entradas: "<<numero_de_entradas<<" saidas: "<<numero_de_saidas<<endl;
-
-
-    vector<string> entradas;
-    for(int i=0; i<numero_de_entradas;i++)
-    {
-        arquivo_da_tabela>>buffer;
-        entradas.push_back(buffer);
-    }
-
-     vector<string> saidas;
-    for(int i=0; i<numero_de_saidas;i++)
-    {
-        arquivo_da_tabela>>buffer;
-        saidas.push_back(buffer);
-    }
-
-    cout<<"\nEntradas: ";
-    for(int i=0; i<numero_de_entradas;i++)
-    {
-        cout<<entradas[i]<<" ";
-    }
-
-    cout<<"\nSaidas: ";
-    for(int i=0; i<numero_de_saidas;i++)
-    {
-        cout<<saidas[i]<<" ";
-    }
-
-    int linhas = pow(2,numero_de_entradas);
-    int colunas = numero_de_entradas+numero_de_saidas;
-
-    cout<<"\nLinhas da Matriz: "<<linhas<<" Colunas da matriz: "<<colunas;
-
-    //alocação da matriz
-    bool** matriz = new bool*[linhas];
-    for (int i = 0; i < linhas; ++i)
-        matriz[i] = new bool[colunas];
-
-    //preenchimento da matriz
-    for(int i=0; i<linhas; i++)
-    {
-        for (int j=0; j<colunas; j++)
+        ifstream fileToRead;
+        string buffer;
+        int numberOfInputs  = 0;
+        int numberOfOutputs = 0;
+        fileToRead.open(inputFileName);
+        if (fileToRead.is_open())
         {
-            arquivo_da_tabela>>buffer;
-            matriz[i][j]=stoi(buffer);
+            fileToRead>>name;
+            fileToRead>>buffer;
+            numberOfInputs = stoi(buffer);
+            fileToRead>>buffer;
+            numberOfOutputs = stoi(buffer);
+
+            for(int i=0; i<numberOfInputs;i++)
+            {
+                fileToRead>>buffer;
+                inputs.push_back(buffer);
+            }
+
+            for(int i=0; i<numberOfOutputs;i++)
+            {
+                fileToRead>>buffer;
+                outputs.push_back(buffer);
+            }
+
+            int Lines  = pow(2,numberOfInputs);
+            int Colums = numberOfInputs + numberOfOutputs;
+
+            truthTable = new bool*[Lines];
+            for (int i = 0; i < Lines; i++)
+            {
+                truthTable[i] = new bool[Colums];
+            }
+
+                //preenchimento da matriz
+            for(int i=0; i<Lines; i++)
+            {
+                for (int j=0; j<Colums; j++)
+                {
+                    fileToRead>>buffer;
+                    truthTable[i][j]=stoi(buffer);
+                }
+            }
+            fileToRead.close();
+            return true;
+        }
+        else
+        {
+            cout<<"Failed To Open File \""<<inputFileName<<"\""<<endl;
+            return false;
         }
     }
 
-    //imprimir a matriz
-    cout<<"\nMatriz alocada: \n";
-    for(int i=0; i<linhas; i++)
+public:
+    NCL_circuit(string inputFileName)
     {
-        for (int j=0; j<colunas; j++)
-        {
-            cout<<matriz[i][j]<<" ";
+        ReadInputFile(inputFileName);
+
+    }
+
+
+    void print_attributes()
+    {
+        cout<<"Inputs: ";
+        for(int i=0; i<inputs.size();i++){
+            cout<<inputs[i]<<"\t";
+        }
+        cout<<"Outputs: ";
+        for(int i=0; i<outputs.size();i++){
+            cout<<outputs[i]<<"\t";
+        }
+        cout<<endl<<endl;
+    }
+
+    void print_truthTable()
+    {
+        int lines = pow(2,inputs.size());
+        int colums = inputs.size()+outputs.size();
+        for(int i=0; i<inputs.size();i++){
+            cout<<inputs[i]<<"\t";
+        }
+        for(int i=0; i<outputs.size();i++){
+            cout<<outputs[i]<<"\t";
         }
         cout<<endl;
+        for(int i=0; i<lines; i++){
+            for (int j=0; j<colums; j++){
+                cout<<truthTable[i][j]<<"\t";
+            }
+            cout<<endl;
+        }
     }
 
-    string all_outputs_expression;
-    string output_true_expression;
-    string output_false_expression;
-
-    for(int s=0; s<numero_de_saidas;s++)
+    void construct_output_expressions()
     {
-        //output_false_expression=saidas[s];
-        //output_false_expression.append("_f=");
+        int numberOfInputs  = inputs.size();
+        int numberOfOutputs = outputs.size();
+        SignalExpression outputSignal;
+        for(int output=0; output<numberOfOutputs;output++){
+            bool firstFalse=true;
+            bool firstTrue=true;
+            outputSignal.signalName=outputs[output];
+            outputSignal.falseExpression="";
+            outputSignal.trueExpression ="";
 
-        //output_true_expression=saidas[s];
-        //output_true_expression.append("_t=");
-        bool primeiro_false=1;
-        bool primeiro_true=1;
-        for(int i=0;i<linhas;i++)
-        {   
-
-            if(matriz[i][numero_de_entradas+s]==false)
-            {
-                if(!primeiro_false)
-                {
-                    output_false_expression.append(" ");
+            for(int line=0; line<pow(2,numberOfInputs); line++){
+                if(truthTable[line][numberOfInputs+output]==0){
+                    if(!firstFalse){
+                        outputSignal.falseExpression.append(" ");
+                    }
+                    firstFalse = false;
+                    for(int input=0;input<numberOfInputs;input++){
+                        outputSignal.falseExpression.append(truthTable[line][input]? "1": "0");
+                    }
                 }
-                primeiro_false=0;
-
-                for(int j=0; j<numero_de_entradas;j++)
-                {
-                    //output_false_expression.append(entradas[j]);
-                    if(matriz[i][j]==false){
-                        output_false_expression.append("0");
-                    }    
-                    else
-                        output_false_expression.append("1");
-                    //if (j+1<numero_de_entradas)
-                        //output_false_expression.append(" & ");
+                if(truthTable[line][numberOfInputs+output]==1){
+                    if(!firstTrue){
+                        outputSignal.trueExpression.append(" ");
+                    }
+                    firstTrue = false;
+                    for(int input=0;input<numberOfInputs;input++){
+                        outputSignal.trueExpression.append(truthTable[line][input]? "1": "0");
+                    }
                 }
-                
-                
+
             }
-
-            if(matriz[i][numero_de_entradas+s]==true)
-            {
-                if(!primeiro_true)
-                {
-                    output_true_expression.append(" ");
-                }
-                primeiro_true=0;
-
-
-                for(int j=0; j<numero_de_entradas;j++)
-                {
-                    //output_true_expression.append(entradas[j]);
-                    if(matriz[i][j]==false){
-                        output_true_expression.append("0");
-                    }    
-                    else
-                        output_true_expression.append("1");
-                    //if (j+1<numero_de_entradas)
-                      //  output_true_expression.append(" & ");
-                }
-            }
+            outputExpressions.push_back(outputSignal);
         }
     }
-    cout<<"\ntrue exp: "<<output_true_expression<<endl;
-    ofstream true_exp;
-    true_exp.open("str_terms_file.txt");
-    true_exp<<output_true_expression;
-    true_exp.close();
 
-    system("python3 \"c:\\Users\\mateu\\Documents\\kmap\\Kmap\\Kmap.py\"");
-    //python script
-
-    ifstream simp_true_exp;
-    simp_true_exp.open("str_terms_file_output.txt");
-    string buffer2;
-    getline(simp_true_exp,buffer2);
-    simp_true_exp.close();
-    cout<<"buffer: "<<buffer2<<endl;
-    int n = buffer2.length();
-    char char_array[n + 1];
-    strcpy(char_array, buffer2.c_str());
-    int contador=0;
-    bool first=true;
-    output_true_expression= saidas[0];
-    output_true_expression.append("_t= ");
-    for(int i=0; i<n; i++)
+    void print_output_expressions()
     {
-        //cout<<"\nchar array test, i="<<i<<"char_array[i]="<<char_array[i];
-        if(char_array[i]=='0')
-        {
-            if(!first)
-            {
-                output_true_expression.append(" & ");
-                
-            }
-            else{
-                first = false;
-            }
-            output_true_expression.append(entradas[contador]);
-            output_true_expression.append("_f");
-            contador++;
-        }
-        else if(char_array[i]=='1')
-        {
-            if(!first)
-            {
-                output_true_expression.append(" & ");
-                
-            }
-            else{
-                first = false;
-            }
-            output_true_expression.append(entradas[contador]);
-            output_true_expression.append("_t"); 
-            contador++;
-        }
-        else if(char_array[i]==' ')
-        {
-            contador=0;
-            output_true_expression.append(" | "); 
-            first=true;
-        }
-        else
-        {
-            contador++;
+        for(int output=0; output<outputExpressions.size();output++){
+            cout<<"\n Ouput Name: "<<outputExpressions[output].signalName;
+            cout<<"\n False Expression: "<<outputExpressions[output].falseExpression;
+            cout<<"\n True  Expression: "<<outputExpressions[output].trueExpression<<endl;
         }
     }
-    output_true_expression.pop_back();
-    output_true_expression.pop_back();
-    cout<<"\ntrue exp: "<<output_true_expression<<endl;
-    
 
-
-
-
-
-
-
-
-    cout<<"\nfalse exp: "<<output_false_expression<<endl;
-
-    ofstream false_exp;
-    false_exp.open("str_terms_file.txt");
-    false_exp<<output_false_expression;
-    false_exp.close();
-
-    system("python3 \"c:\\Users\\mateu\\Documents\\kmap\\Kmap\\Kmap.py\"");
-    //python script
-
-    ifstream simp_false_exp;
-    simp_false_exp.open("str_terms_file_output.txt");
-    buffer2 = "";
-    getline(simp_false_exp,buffer2);
-    simp_false_exp.close();
-    cout<<"buffer: "<<buffer2<<endl;
-    n = buffer2.length();
-    char char_array2[n + 1];
-    strcpy(char_array2, buffer2.c_str());
-    contador=0;
-    first=true;
-    output_false_expression= saidas[0];
-    output_false_expression.append("_f= ");
-    for(int i=0; i<n; i++)
+    void simplify_expressions()
     {
-        //cout<<"\nchar array test, i="<<i<<"char_array[i]="<<char_array[i];
-        if(char_array2[i]=='0')
-        {
-            if(!first)
-            {
-                output_false_expression.append(" & ");
-                
-            }
-            else{
-                first = false;
-            }
-            output_false_expression.append(entradas[contador]);
-            output_false_expression.append("_f");
-            contador++;
-        }
-        else if(char_array2[i]=='1')
-        {
-            if(!first)
-            {
-                output_false_expression.append(" & ");
-                
-            }
-            else{
-                first = false;
-            }
-            output_false_expression.append(entradas[contador]);
-            output_false_expression.append("_t"); 
-            contador++;
-        }
-        else if(char_array2[i]==' ')
-        {
-            contador=0;
-            output_false_expression.append(" | "); 
-            first=true;
-        }
-        else
-        {
-            contador++;
+        ofstream expressionFile;
+        ifstream expressionFileOutput;
+        string buffer;
+        string script = "python3 ";
+        script.append(get_current_dir());
+        script.append("\\Kmap.py");
+        for(int output=0; output<outputExpressions.size();output++){
+            expressionFile.open("expression_file.txt");
+            expressionFile<<outputExpressions[output].falseExpression;
+            expressionFile.close();
+            
+            system(script.c_str());
+
+            expressionFileOutput.open("expression_file_output.txt");
+            getline(expressionFileOutput,buffer);
+            expressionFileOutput.close();
+            outputExpressions[output].falseExpression=buffer;
+
+            expressionFile.open("expression_file.txt");
+            expressionFile<<outputExpressions[output].trueExpression;
+            expressionFile.close();
+            
+            system(script.c_str());
+
+            expressionFileOutput.open("expression_file_output.txt");
+            getline(expressionFileOutput,buffer);
+            expressionFileOutput.close();
+            outputExpressions[output].trueExpression=buffer;
         }
     }
-    output_false_expression.pop_back();
-    output_false_expression.pop_back();
-    cout<<"\nfalse exp: "<<output_false_expression<<endl;
 
 
+    void convert_to_named(){
+        char * char_array_buffer;
+        int size;
+        int counter;
+        bool first;
+        string buffer;
+        for(int output=0; output<outputExpressions.size();output++){
+            int i=0;
+            while (i<2){
+                first=true;
+                counter=0;
+                if(i==0){
+                    buffer=outputExpressions[output].falseExpression;
+                    size=outputExpressions[output].falseExpression.length();
+                }         
+                else {
+                    buffer=outputExpressions[output].trueExpression;
+                    size=outputExpressions[output].trueExpression.length();
+                }
+                char_array_buffer = new char[size];
+                strcpy(char_array_buffer,buffer.c_str());
+                buffer = "";
+                buffer = outputExpressions[output].signalName;
+                if (i==0)
+                    buffer.append("_f= (");
+                else
+                    buffer.append("_t= (");
+                for (int index=0; index<size;index++){
+                    switch (char_array_buffer[index])         
+                    {
+                    case '0':
+                        if(!first)
+                            buffer.append(" & ");
+                        else
+                            first=false;
+                        buffer.append(inputs[counter]);
+                        buffer.append("_f");
+                        counter++;
+                        break;
 
+                    case '1':
+                        if(!first)
+                            buffer.append(" & ");    
+                        else
+                            first = false;
+                        buffer.append(inputs[counter]);
+                        buffer.append("_t");
+                        counter++;
+                        break;
 
+                    case ' ':
+                        counter=0;
+                        buffer.append(") | (");
+                        first=true;
+                        break;
 
-    string entradas_dual_rail;
-    string histerese;
-    for (int i=0; i<numero_de_entradas;i++)
+                    default:
+                        counter++;
+                        break;
+                    } 
+                }
+            buffer.append(")");
+            if(i==0)
+                outputExpressions[output].falseExpression=buffer;
+            else
+                outputExpressions[output].trueExpression=buffer;
+            i++;    
+            delete[] char_array_buffer;
+            }
+            
+        }
+
+    }
+    void connstruct_hysteresis()
     {
-        entradas_dual_rail.append(entradas[i]);
-        entradas_dual_rail.append("_t, ");
-        entradas_dual_rail.append(entradas[i]);
-        entradas_dual_rail.append("_f, ");
+        for(int i=0;i<inputs.size();i++)
+        {
+            hysteresys.append(inputs[i]);
+            hysteresys.append("_t | "); 
+            hysteresys.append(inputs[i]);
+            hysteresys.append("_f");
+            if(i+1<inputs.size())
+                hysteresys.append(" | ");
+        }
 
-        histerese.append(entradas[i]);
-        histerese.append("_t | ");
-
-        histerese.append(entradas[i]);
-        histerese.append("_f");
-
-        if(i+1<numero_de_entradas)
-        histerese.append(" | ");
     }
 
-    cout<<"\n histerese: "<<histerese;
+    void print_hysteresis()
+    {
+        cout<<"\n Hysteresys: "<<hysteresys<<endl;
+    }
 
-    string saidas_dual_rail;
-        saidas_dual_rail.append(saidas[0]);
-        saidas_dual_rail.append("_t, ");
-        saidas_dual_rail.append(saidas[0]);
-        saidas_dual_rail.append("_f ");
+    void print_module_file()
+    {
+        mkdir("Verilog_Files");
+        string filePath="Verilog_Files\\";
+        filePath.append(name);
+        filePath.append(".v");
+        ofstream verilog_module;
+        cout<<"\nPrinting resulting module at path: "<<filePath<<endl;
+
+        verilog_module.open(filePath);
+
+        verilog_module << "module "<<name<< "(\n\tinput ";
+        for(int i=0;i<inputs.size();i++)
+        {
+            verilog_module<<inputs[i]<<"_t, "<<inputs[i]<<"_f, ";
+        }
+        verilog_module << "\n\toutput ";
+        for(int i=0;i<outputs.size();i++)
+        {
+            verilog_module<<outputs[i]<<"_t, "<<outputs[i]<<"_f";
+            if(i+1<outputs.size())
+                verilog_module<<", ";
+        }
+        verilog_module<<");\n";
+        verilog_module<<"\n\twire hysteresis;";
+        verilog_module<<"\n\tassign hysteresis = "<<hysteresys<<";\n\n";
+
+        for(int output=0; output<outputExpressions.size();output++){
+            verilog_module<<"\tassign "<<outputExpressions[output].falseExpression<<" | (hysteresis & "<<outputs[output]<<"_f);\n";
+            verilog_module<<"\tassign "<<outputExpressions[output].trueExpression <<" | (hysteresis & "<<outputs[output]<<"_t);\n";
+        }
+        verilog_module <<"\nendmodule "<<endl;
+        verilog_module.close();
+    }
+    void print_test_file()
+    {
+        string filePath="Verilog_Files\\";
+        filePath.append(name);
+        filePath.append("_tb.v");
+        ofstream verilog_module;
+        cout<<"\nPrinting module test at path: "<<filePath<<endl;
+
+        verilog_module.open(filePath);
+
+        verilog_module << "`timescale 1ns/1ps\n";
+        verilog_module << "module "<<name<<"_tb();\n"; 
+        verilog_module << "\treg ";
+        for(int i=0;i<inputs.size();i++)
+        {
+            verilog_module<<inputs[i]<<"_t, "<<inputs[i]<<"_f";
+            if(i+1<inputs.size())
+                verilog_module<<", ";
+        }
+        verilog_module << ";\n";
+        verilog_module << "\twire ";
+        for(int i=0;i<outputs.size();i++)
+        {
+            verilog_module<<outputs[i]<<"_t, "<<outputs[i]<<"_f";
+            if(i+1<outputs.size())
+                verilog_module<<", ";
+        }
+        verilog_module << ";\n";
+        verilog_module << "\n\t"<<name<<" dut(";
+
+        for(int i=0;i<inputs.size();i++)
+        {
+            verilog_module<<"\n\t\t"<<inputs[i]<<"_t, "<<inputs[i]<<"_f,";
+        }
+        for(int i=0;i<outputs.size();i++)
+        {
+            verilog_module<<"\n\t\t"<<outputs[i]<<"_t, "<<outputs[i]<<"_f";
+            if(i+1<outputs.size())
+                verilog_module<<", ";
+        }
+        verilog_module << "\n\t);\n";
+        verilog_module <<"\n\ttask null_state(); begin\n";
+        for(int i=0;i<inputs.size();i++)
+        {
+            verilog_module<<"\t\t"<<inputs[i]<<"_t=0; "<<inputs[i]<<"_f=0; //"<<inputs[i]<<"==NULL\n";
+        }
+        verilog_module <<"\t\tend";
+        verilog_module <<"\n\tendtask";
+        verilog_module <<"\n\n\tinitial begin";
+        for(int line=0; line<pow(2,inputs.size()); line++){
+            verilog_module <<"\n\n\t\tnull_state();";
+            verilog_module <<"\n\t\t#10;";
+            verilog_module<<"\n\n\t\t//Testing Truth Table line "<<line;
+            for(int input=0; input<inputs.size(); input++){
+                if(truthTable[line][input]==1){
+                    verilog_module<<"\n\t\t"<<inputs[input]<<"_t=1; ";
+                    verilog_module<<inputs[input]<<"_f=0;";
+                    verilog_module<<"// "<<inputs[input]<<"==1";
+                } 
+                else {
+                    verilog_module<<"\n\t\t"<<inputs[input]<<"_t=0; ";
+                    verilog_module<<inputs[input]<<"_f=1;";
+                    verilog_module<<"// "<<inputs[input]<<"==0";
+                }
+            }
+            verilog_module<<"\n\t\t#10;";
+            for(int output=0; output<outputs.size();output++){
+                verilog_module<<"\n\t\tif("<<outputs[output]<<"_t=="<<truthTable[line][inputs.size()+output];
+                verilog_module<<" && " <<outputs[output]<<"_f=="<<!(truthTable[line][inputs.size()+output]);
+                verilog_module<<")";
+                verilog_module<<"\n\t\t\t$display(\"CORRECT BEHAVIOR: OUTPUT: "<<outputs[output]<<" LINE "<<line<<"\");";
+                verilog_module<<"\n\t\telse";
+                verilog_module<<"\n\t\t\t$error(\"INCORRECT BEHAVIOR: OUTPUT: "<<outputs[output]<<" LINE "<<line<<"\");";
+            }
+        }
+        verilog_module<<"\n\tend";
+        verilog_module<<"\nendmodule ";
+    }    
+};
 
 
-    mkdir("Verilog_Files");
-    string filePath="Verilog_Files\\";
-    filePath.append(nome_do_modulo);
-    filePath.append(".v");
-    ofstream verilog_module;
-    cout<<filePath;
 
-    verilog_module.open(filePath);
+string convertToString(char* a, int size)
+{
+    int i;
+    string s = "";
+    for (i = 0; i < size; i++) {
+        s = s + a[i];
+    }
+    return s;
+}
 
-    verilog_module << "module "<<nome_do_modulo<< "(input " <<entradas_dual_rail<<endl;
-    verilog_module << "output "<<saidas_dual_rail<<");"<<endl;
 
-    verilog_module <<" \n\nassign "<<output_true_expression<<" | (("<<histerese<<") & "<<saidas[0]<<"_t)"  <<";\n";
-    verilog_module <<" \n\nassign "<<output_false_expression<<" | (("<<histerese<<") & "<<saidas[0]<<"_f)"  <<";\n";
+int main(int argc, char *argv[])
+{
+    NCL_circuit ncl_circuit(convertToString(argv[1],strlen(argv[1])));
+    cout << get_current_dir() << endl;
+    ncl_circuit.print_attributes();
+    ncl_circuit.print_truthTable();
+    ncl_circuit.construct_output_expressions();
+    ncl_circuit.print_output_expressions();
+    ncl_circuit.simplify_expressions();
+    ncl_circuit.print_output_expressions();
+    ncl_circuit.convert_to_named();
+    ncl_circuit.print_output_expressions();
+    ncl_circuit.connstruct_hysteresis();
+    ncl_circuit.print_hysteresis();
+    ncl_circuit.print_module_file();
+    ncl_circuit.print_test_file();
 
-    verilog_module <<" \nendmodule "<<endl;
-    verilog_module.close();
-        
-                
     return 0;
 }
