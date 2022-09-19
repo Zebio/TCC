@@ -1,0 +1,19 @@
+\begin{thebibliography}{xx}
+
+\harvarditem{Gustafson \harvardand\ Kessel}{1979}{gustafson}
+Gustafson, D. \harvardand\ Kessel, W.~C.  \harvardyearleft
+  1979\harvardyearright .
+\newblock Fuzzy clustering with a fuzzy covariance matrix, {\em Proc. IEEE
+  CDC}, IEEE, p.~761?766.
+
+\harvarditem{Ljung}{1999}{ljung1999}
+Ljung, L.  \harvardyearleft 1999\harvardyearright .
+\newblock {\em System identification: Theory for the user}, 2 edn, Prentice
+  Hall.
+
+\harvarditem{Marquardt}{1963}{marquardt1963}
+Marquardt, D.  \harvardyearleft 1963\harvardyearright .
+\newblock An algorithm for the least-square estimation of nonlinear parameters,
+  {\em Journal of Applied Mathematics} {\bf 11}(2):~431 -- 441.
+
+\end{thebibliography}
