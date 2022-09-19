@@ -35,7 +35,7 @@ private:
     string name;
     vector<string> inputs;
     vector<string> outputs;
-    bool ** truthTable;
+    char ** truthTable;
     string hysteresys;
     vector<SignalExpression> outputExpressions;
 
@@ -69,10 +69,10 @@ private:
             int Lines  = pow(2,numberOfInputs);
             int Colums = numberOfInputs + numberOfOutputs;
 
-            truthTable = new bool*[Lines];
+            truthTable = new char*[Lines];
             for (int i = 0; i < Lines; i++)
             {
-                truthTable[i] = new bool[Colums];
+                truthTable[i] = new char[Colums];
             }
 
                 //preenchimento da matriz
@@ -81,7 +81,7 @@ private:
                 for (int j=0; j<Colums; j++)
                 {
                     fileToRead>>buffer;
-                    truthTable[i][j]=stoi(buffer);
+                    truthTable[i][j]=buffer[0];
                 }
             }
             fileToRead.close();
@@ -147,22 +147,22 @@ public:
             outputSignal.trueExpression ="";
 
             for(int line=0; line<pow(2,numberOfInputs); line++){
-                if(truthTable[line][numberOfInputs+output]==0){
+                if(truthTable[line][numberOfInputs+output]=='0'){
                     if(!firstFalse){
                         outputSignal.falseExpression.append(" ");
                     }
                     firstFalse = false;
                     for(int input=0;input<numberOfInputs;input++){
-                        outputSignal.falseExpression.append(truthTable[line][input]? "1": "0");
+                        outputSignal.falseExpression.append(truthTable[line][input]=='1'? "1": "0");
                     }
                 }
-                if(truthTable[line][numberOfInputs+output]==1){
+                if(truthTable[line][numberOfInputs+output]=='1'){
                     if(!firstTrue){
                         outputSignal.trueExpression.append(" ");
                     }
                     firstTrue = false;
                     for(int input=0;input<numberOfInputs;input++){
-                        outputSignal.trueExpression.append(truthTable[line][input]? "1": "0");
+                        outputSignal.trueExpression.append(truthTable[line][input]=='1'? "1": "0");
                     }
                 }
 

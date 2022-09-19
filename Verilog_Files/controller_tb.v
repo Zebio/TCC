@@ -31,11 +31,11 @@ module controller_tb();
 		Rd_t=0; Rd_f=1;// Rd==0
 		Ld_t=0; Ld_f=1;// Ld==0
 		#10;
-		if(R_c_t==0 && R_c_f==1)
+		if(R_c_t==0 && R_c_f==0)
 			$display("CORRECT BEHAVIOR: OUTPUT: R_c LINE 0");
 		else
 			$error("INCORRECT BEHAVIOR: OUTPUT: R_c LINE 0");
-		if(R_m_t==0 && R_m_f==1)
+		if(R_m_t==0 && R_m_f==0)
 			$display("CORRECT BEHAVIOR: OUTPUT: R_m LINE 0");
 		else
 			$error("INCORRECT BEHAVIOR: OUTPUT: R_m LINE 0");
@@ -47,13 +47,13 @@ module controller_tb();
 		PH0_t=0; PH0_f=1;// PH0==0
 		PH1_t=0; PH1_f=1;// PH1==0
 		Rd_t=0; Rd_f=1;// Rd==0
-		Ld_t=1; Ld_f=0;// Ld==1
+		Ld_t=0; Ld_f=1;// Ld==0
 		#10;
-		if(R_c_t==0 && R_c_f==1)
+		if(R_c_t==0 && R_c_f==0)
 			$display("CORRECT BEHAVIOR: OUTPUT: R_c LINE 1");
 		else
 			$error("INCORRECT BEHAVIOR: OUTPUT: R_c LINE 1");
-		if(R_m_t==0 && R_m_f==1)
+		if(R_m_t==0 && R_m_f==0)
 			$display("CORRECT BEHAVIOR: OUTPUT: R_m LINE 1");
 		else
 			$error("INCORRECT BEHAVIOR: OUTPUT: R_m LINE 1");
@@ -64,14 +64,14 @@ module controller_tb();
 		//Testing Truth Table line 2
 		PH0_t=0; PH0_f=1;// PH0==0
 		PH1_t=0; PH1_f=1;// PH1==0
-		Rd_t=1; Rd_f=0;// Rd==1
+		Rd_t=0; Rd_f=1;// Rd==0
 		Ld_t=0; Ld_f=1;// Ld==0
 		#10;
-		if(R_c_t==0 && R_c_f==1)
+		if(R_c_t==0 && R_c_f==0)
 			$display("CORRECT BEHAVIOR: OUTPUT: R_c LINE 2");
 		else
 			$error("INCORRECT BEHAVIOR: OUTPUT: R_c LINE 2");
-		if(R_m_t==0 && R_m_f==1)
+		if(R_m_t==0 && R_m_f==0)
 			$display("CORRECT BEHAVIOR: OUTPUT: R_m LINE 2");
 		else
 			$error("INCORRECT BEHAVIOR: OUTPUT: R_m LINE 2");
@@ -82,14 +82,14 @@ module controller_tb();
 		//Testing Truth Table line 3
 		PH0_t=0; PH0_f=1;// PH0==0
 		PH1_t=0; PH1_f=1;// PH1==0
-		Rd_t=1; Rd_f=0;// Rd==1
-		Ld_t=1; Ld_f=0;// Ld==1
+		Rd_t=0; Rd_f=1;// Rd==0
+		Ld_t=0; Ld_f=1;// Ld==0
 		#10;
-		if(R_c_t==0 && R_c_f==1)
+		if(R_c_t==0 && R_c_f==0)
 			$display("CORRECT BEHAVIOR: OUTPUT: R_c LINE 3");
 		else
 			$error("INCORRECT BEHAVIOR: OUTPUT: R_c LINE 3");
-		if(R_m_t==0 && R_m_f==1)
+		if(R_m_t==0 && R_m_f==0)
 			$display("CORRECT BEHAVIOR: OUTPUT: R_m LINE 3");
 		else
 			$error("INCORRECT BEHAVIOR: OUTPUT: R_m LINE 3");
@@ -99,15 +99,15 @@ module controller_tb();
 
 		//Testing Truth Table line 4
 		PH0_t=0; PH0_f=1;// PH0==0
-		PH1_t=1; PH1_f=0;// PH1==1
+		PH1_t=0; PH1_f=1;// PH1==0
 		Rd_t=0; Rd_f=1;// Rd==0
 		Ld_t=0; Ld_f=1;// Ld==0
 		#10;
-		if(R_c_t==0 && R_c_f==1)
+		if(R_c_t==0 && R_c_f==0)
 			$display("CORRECT BEHAVIOR: OUTPUT: R_c LINE 4");
 		else
 			$error("INCORRECT BEHAVIOR: OUTPUT: R_c LINE 4");
-		if(R_m_t==0 && R_m_f==1)
+		if(R_m_t==0 && R_m_f==0)
 			$display("CORRECT BEHAVIOR: OUTPUT: R_m LINE 4");
 		else
 			$error("INCORRECT BEHAVIOR: OUTPUT: R_m LINE 4");
@@ -117,11 +117,11 @@ module controller_tb();
 
 		//Testing Truth Table line 5
 		PH0_t=0; PH0_f=1;// PH0==0
-		PH1_t=1; PH1_f=0;// PH1==1
+		PH1_t=0; PH1_f=1;// PH1==0
 		Rd_t=0; Rd_f=1;// Rd==0
-		Ld_t=1; Ld_f=0;// Ld==1
+		Ld_t=0; Ld_f=1;// Ld==0
 		#10;
-		if(R_c_t==0 && R_c_f==1)
+		if(R_c_t==0 && R_c_f==0)
 			$display("CORRECT BEHAVIOR: OUTPUT: R_c LINE 5");
 		else
 			$error("INCORRECT BEHAVIOR: OUTPUT: R_c LINE 5");
@@ -135,15 +135,15 @@ module controller_tb();
 
 		//Testing Truth Table line 6
 		PH0_t=0; PH0_f=1;// PH0==0
-		PH1_t=1; PH1_f=0;// PH1==1
-		Rd_t=1; Rd_f=0;// Rd==1
+		PH1_t=0; PH1_f=1;// PH1==0
+		Rd_t=0; Rd_f=1;// Rd==0
 		Ld_t=0; Ld_f=1;// Ld==0
 		#10;
-		if(R_c_t==1 && R_c_f==0)
+		if(R_c_t==N && R_c_f==0)
 			$display("CORRECT BEHAVIOR: OUTPUT: R_c LINE 6");
 		else
 			$error("INCORRECT BEHAVIOR: OUTPUT: R_c LINE 6");
-		if(R_m_t==0 && R_m_f==1)
+		if(R_m_t==0 && R_m_f==0)
 			$display("CORRECT BEHAVIOR: OUTPUT: R_m LINE 6");
 		else
 			$error("INCORRECT BEHAVIOR: OUTPUT: R_m LINE 6");
@@ -153,9 +153,9 @@ module controller_tb();
 
 		//Testing Truth Table line 7
 		PH0_t=0; PH0_f=1;// PH0==0
-		PH1_t=1; PH1_f=0;// PH1==1
-		Rd_t=1; Rd_f=0;// Rd==1
-		Ld_t=1; Ld_f=0;// Ld==1
+		PH1_t=0; PH1_f=1;// PH1==0
+		Rd_t=0; Rd_f=1;// Rd==0
+		Ld_t=0; Ld_f=1;// Ld==0
 		#10;
 		if(R_c_t==1 && R_c_f==0)
 			$display("CORRECT BEHAVIOR: OUTPUT: R_c LINE 7");
@@ -170,12 +170,12 @@ module controller_tb();
 		#10;
 
 		//Testing Truth Table line 8
-		PH0_t=1; PH0_f=0;// PH0==1
+		PH0_t=0; PH0_f=1;// PH0==0
 		PH1_t=0; PH1_f=1;// PH1==0
 		Rd_t=0; Rd_f=1;// Rd==0
 		Ld_t=0; Ld_f=1;// Ld==0
 		#10;
-		if(R_c_t==0 && R_c_f==1)
+		if(R_c_t==0 && R_c_f==0)
 			$display("CORRECT BEHAVIOR: OUTPUT: R_c LINE 8");
 		else
 			$error("INCORRECT BEHAVIOR: OUTPUT: R_c LINE 8");
@@ -188,12 +188,12 @@ module controller_tb();
 		#10;
 
 		//Testing Truth Table line 9
-		PH0_t=1; PH0_f=0;// PH0==1
+		PH0_t=0; PH0_f=1;// PH0==0
 		PH1_t=0; PH1_f=1;// PH1==0
 		Rd_t=0; Rd_f=1;// Rd==0
-		Ld_t=1; Ld_f=0;// Ld==1
+		Ld_t=0; Ld_f=1;// Ld==0
 		#10;
-		if(R_c_t==0 && R_c_f==1)
+		if(R_c_t==0 && R_c_f==0)
 			$display("CORRECT BEHAVIOR: OUTPUT: R_c LINE 9");
 		else
 			$error("INCORRECT BEHAVIOR: OUTPUT: R_c LINE 9");
@@ -206,12 +206,12 @@ module controller_tb();
 		#10;
 
 		//Testing Truth Table line 10
-		PH0_t=1; PH0_f=0;// PH0==1
+		PH0_t=0; PH0_f=1;// PH0==0
 		PH1_t=0; PH1_f=1;// PH1==0
-		Rd_t=1; Rd_f=0;// Rd==1
+		Rd_t=0; Rd_f=1;// Rd==0
 		Ld_t=0; Ld_f=1;// Ld==0
 		#10;
-		if(R_c_t==0 && R_c_f==1)
+		if(R_c_t==0 && R_c_f==0)
 			$display("CORRECT BEHAVIOR: OUTPUT: R_c LINE 10");
 		else
 			$error("INCORRECT BEHAVIOR: OUTPUT: R_c LINE 10");
@@ -224,12 +224,12 @@ module controller_tb();
 		#10;
 
 		//Testing Truth Table line 11
-		PH0_t=1; PH0_f=0;// PH0==1
+		PH0_t=0; PH0_f=1;// PH0==0
 		PH1_t=0; PH1_f=1;// PH1==0
-		Rd_t=1; Rd_f=0;// Rd==1
-		Ld_t=1; Ld_f=0;// Ld==1
+		Rd_t=0; Rd_f=1;// Rd==0
+		Ld_t=0; Ld_f=1;// Ld==0
 		#10;
-		if(R_c_t==0 && R_c_f==1)
+		if(R_c_t==0 && R_c_f==0)
 			$display("CORRECT BEHAVIOR: OUTPUT: R_c LINE 11");
 		else
 			$error("INCORRECT BEHAVIOR: OUTPUT: R_c LINE 11");
@@ -242,12 +242,12 @@ module controller_tb();
 		#10;
 
 		//Testing Truth Table line 12
-		PH0_t=1; PH0_f=0;// PH0==1
-		PH1_t=1; PH1_f=0;// PH1==1
+		PH0_t=0; PH0_f=1;// PH0==0
+		PH1_t=0; PH1_f=1;// PH1==0
 		Rd_t=0; Rd_f=1;// Rd==0
 		Ld_t=0; Ld_f=1;// Ld==0
 		#10;
-		if(R_c_t==0 && R_c_f==1)
+		if(R_c_t==0 && R_c_f==0)
 			$display("CORRECT BEHAVIOR: OUTPUT: R_c LINE 12");
 		else
 			$error("INCORRECT BEHAVIOR: OUTPUT: R_c LINE 12");
@@ -260,12 +260,12 @@ module controller_tb();
 		#10;
 
 		//Testing Truth Table line 13
-		PH0_t=1; PH0_f=0;// PH0==1
-		PH1_t=1; PH1_f=0;// PH1==1
+		PH0_t=0; PH0_f=1;// PH0==0
+		PH1_t=0; PH1_f=1;// PH1==0
 		Rd_t=0; Rd_f=1;// Rd==0
-		Ld_t=1; Ld_f=0;// Ld==1
+		Ld_t=0; Ld_f=1;// Ld==0
 		#10;
-		if(R_c_t==0 && R_c_f==1)
+		if(R_c_t==0 && R_c_f==0)
 			$display("CORRECT BEHAVIOR: OUTPUT: R_c LINE 13");
 		else
 			$error("INCORRECT BEHAVIOR: OUTPUT: R_c LINE 13");
@@ -278,12 +278,12 @@ module controller_tb();
 		#10;
 
 		//Testing Truth Table line 14
-		PH0_t=1; PH0_f=0;// PH0==1
-		PH1_t=1; PH1_f=0;// PH1==1
-		Rd_t=1; Rd_f=0;// Rd==1
+		PH0_t=0; PH0_f=1;// PH0==0
+		PH1_t=0; PH1_f=1;// PH1==0
+		Rd_t=0; Rd_f=1;// Rd==0
 		Ld_t=0; Ld_f=1;// Ld==0
 		#10;
-		if(R_c_t==0 && R_c_f==1)
+		if(R_c_t==0 && R_c_f==0)
 			$display("CORRECT BEHAVIOR: OUTPUT: R_c LINE 14");
 		else
 			$error("INCORRECT BEHAVIOR: OUTPUT: R_c LINE 14");
@@ -296,12 +296,12 @@ module controller_tb();
 		#10;
 
 		//Testing Truth Table line 15
-		PH0_t=1; PH0_f=0;// PH0==1
-		PH1_t=1; PH1_f=0;// PH1==1
-		Rd_t=1; Rd_f=0;// Rd==1
-		Ld_t=1; Ld_f=0;// Ld==1
+		PH0_t=0; PH0_f=1;// PH0==0
+		PH1_t=0; PH1_f=1;// PH1==0
+		Rd_t=0; Rd_f=1;// Rd==0
+		Ld_t=0; Ld_f=1;// Ld==0
 		#10;
-		if(R_c_t==0 && R_c_f==1)
+		if(R_c_t==0 && R_c_f==0)
 			$display("CORRECT BEHAVIOR: OUTPUT: R_c LINE 15");
 		else
 			$error("INCORRECT BEHAVIOR: OUTPUT: R_c LINE 15");
