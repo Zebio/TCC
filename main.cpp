@@ -80,7 +80,11 @@ private:
             {
                 for (int j=0; j<Colums; j++)
                 {
-                    fileToRead>>buffer;
+                    if (fileToRead.peek()!=EOF)
+                        fileToRead>>buffer;
+                    else
+                        buffer="-";
+                    
                     truthTable[i][j]=buffer[0];
                 }
             }
@@ -134,6 +138,28 @@ public:
         }
     }
 
+    string dont_care_inputs(int index,string minterm)
+    {
+        string minterm0,minterm1;
+        if (minterm.length()==index)
+            return minterm;
+        if(minterm[index]=='X'){
+            minterm0=minterm;
+            minterm1=minterm;
+            minterm0[index]='0';
+            minterm1[index]='1';
+            minterm0=dont_care_inputs(index+1,minterm0);
+            minterm1=dont_care_inputs(index+1,minterm1);
+            minterm = minterm0;
+            minterm.append(" ");
+            minterm.append(minterm1);
+            return minterm;
+        }
+
+        else {
+            return dont_care_inputs(index+1,minterm);
+        }
+    }
     void construct_output_expressions()
     {
         int numberOfInputs  = inputs.size();
@@ -145,28 +171,42 @@ public:
             outputSignal.signalName=outputs[output];
             outputSignal.falseExpression="";
             outputSignal.trueExpression ="";
+            string minterm = "";
 
             for(int line=0; line<pow(2,numberOfInputs); line++){
                 if(truthTable[line][numberOfInputs+output]=='0'){
-                    if(!firstFalse){
-                        outputSignal.falseExpression.append(" ");
-                    }
+                  //  if(!firstFalse){
+                       // minterm.append(" ");
+                   // }
                     firstFalse = false;
                     for(int input=0;input<numberOfInputs;input++){
-                        outputSignal.falseExpression.append(truthTable[line][input]=='1'? "1": "0");
+                        minterm.append(truthTable[line][input]=='1'? "1": truthTable[line][input]=='0'? "0" : "X");
                     }
+                    minterm=dont_care_inputs(0,minterm);
+                    minterm.append(" ");
+                    outputSignal.falseExpression.append(minterm);
+                    minterm = "";
                 }
                 if(truthTable[line][numberOfInputs+output]=='1'){
-                    if(!firstTrue){
-                        outputSignal.trueExpression.append(" ");
-                    }
+                  //  if(!firstTrue){
+                       // minterm.append(" ");
+                  //  }
                     firstTrue = false;
                     for(int input=0;input<numberOfInputs;input++){
-                        outputSignal.trueExpression.append(truthTable[line][input]=='1'? "1": "0");
+                        minterm.append(truthTable[line][input]=='1'? "1": truthTable[line][input]=='0'? "0" : "X");
                     }
+                    minterm=dont_care_inputs(0,minterm);
+                    minterm.append(" ");
+                    outputSignal.trueExpression.append(minterm);
+                    minterm="";
                 }
 
             }
+            if (!outputSignal.falseExpression.empty())
+                outputSignal.falseExpression.pop_back();
+            if (!outputSignal.trueExpression.empty())
+                outputSignal.trueExpression.pop_back();
+
             outputExpressions.push_back(outputSignal);
         }
     }
@@ -193,23 +233,31 @@ public:
             expressionFile<<outputExpressions[output].falseExpression;
             expressionFile.close();
             
-            system(script.c_str());
+            if (outputExpressions[output].falseExpression != "")
+            {
+                system(script.c_str());
 
-            expressionFileOutput.open("expression_file_output.txt");
-            getline(expressionFileOutput,buffer);
-            expressionFileOutput.close();
-            outputExpressions[output].falseExpression=buffer;
+                expressionFileOutput.open("expression_file_output.txt");
+                getline(expressionFileOutput,buffer);
+                expressionFileOutput.close();
+                outputExpressions[output].falseExpression=buffer;
+            }
+
 
             expressionFile.open("expression_file.txt");
             expressionFile<<outputExpressions[output].trueExpression;
             expressionFile.close();
             
-            system(script.c_str());
 
-            expressionFileOutput.open("expression_file_output.txt");
-            getline(expressionFileOutput,buffer);
-            expressionFileOutput.close();
-            outputExpressions[output].trueExpression=buffer;
+            if (outputExpressions[output].trueExpression != "")
+            {
+                system(script.c_str());
+
+                expressionFileOutput.open("expression_file_output.txt");
+                getline(expressionFileOutput,buffer);
+                expressionFileOutput.close();
+                outputExpressions[output].trueExpression=buffer;
+            }
         }
     }
 

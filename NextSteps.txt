@@ -1,0 +1,2 @@
+Use .csv to edit using excel
+use the input name in the output to copy behavior
