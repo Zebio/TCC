@@ -4,6 +4,7 @@
 #include <math.h> //pow
 #include <direct.h>
 #include <cstring>
+#include <sstream> //stringstream
 
 #ifdef WINDOWS
 #include <direct.h>
@@ -39,56 +40,55 @@ private:
     string hysteresys;
     vector<SignalExpression> outputExpressions;
 
-    bool ReadInputFile(string inputFileName)
+    bool importTruthTable(string inputFileName)
     {
-        ifstream fileToRead;
-        string buffer;
-        int numberOfInputs  = 0;
-        int numberOfOutputs = 0;
-        fileToRead.open(inputFileName);
-        if (fileToRead.is_open())
+        const char CSV_DELIMITER = ';';
+        ifstream fileToRead; //the input file
+        string lineBuffer;   //string buffer to read each file line
+        fileToRead.open(inputFileName); //try to open the file
+        if (fileToRead.is_open()) //if the file is oppened
         {
-            fileToRead>>name;
-            fileToRead>>buffer;
-            numberOfInputs = stoi(buffer);
-            fileToRead>>buffer;
-            numberOfOutputs = stoi(buffer);
-
-            for(int i=0; i<numberOfInputs;i++)
+            getline(fileToRead,lineBuffer); //Read the first line of the file and puts in the buffer
+            stringstream ss(lineBuffer); //convert the buffer to a stringstream 
+            string token="a"; //initialize the token 
+            while(token!="") //reads all tokens(inputs) until "" -see truth table format
             {
-                fileToRead>>buffer;
-                inputs.push_back(buffer);
+                getline(ss,token, CSV_DELIMITER);
+                if(token !="") 
+                    inputs.push_back(token); //push bach in the vector each input
+            }
+            while(ss.good()) //while in the line, read all outputs
+            {
+                getline(ss,token,CSV_DELIMITER);
+                outputs.push_back(token); //push back in the vector each output
             }
 
-            for(int i=0; i<numberOfOutputs;i++)
+            int rows  = pow(2,inputs.size()); //the number of the rows of the truth table = n_inputs^2
+            int numberOfColums = inputs.size() + 1 + outputs.size(); //the number of collums of the truth table
+           
+            truthTable = new char*[rows]; //allocate the truth table (rows)
+            for (int i = 0; i < rows; i++)
             {
-                fileToRead>>buffer;
-                outputs.push_back(buffer);
+                truthTable[i] = new char[numberOfColums]; //allocathe the truth table(numberOfColums)
             }
 
-            int Lines  = pow(2,numberOfInputs);
-            int Colums = numberOfInputs + numberOfOutputs;
-
-            truthTable = new char*[Lines];
-            for (int i = 0; i < Lines; i++)
+            int row=0;
+            while (getline(fileToRead,lineBuffer)) //read a line in the file
             {
-                truthTable[i] = new char[Colums];
-            }
-
-                //preenchimento da matriz
-            for(int i=0; i<Lines; i++)
-            {
-                for (int j=0; j<Colums; j++)
+                stringstream ss(lineBuffer); //convert the buffer to a stringstream 
+                for (int input=0;input<inputs.size();input++)
                 {
-                    if (fileToRead.peek()!=EOF)
-                        fileToRead>>buffer;
-                    else
-                        buffer="-";
-                    
-                    truthTable[i][j]=buffer[0];
+                    getline(ss,token,CSV_DELIMITER);
+                    truthTable[row][input]=token[0];
                 }
+                getline(ss,token,CSV_DELIMITER);
+                for (int output=0;output<outputs.size();output++)
+                {
+                    getline(ss,token,CSV_DELIMITER);
+                    truthTable[row][inputs.size()+output]=token[0];
+                }
+                row++;
             }
-            fileToRead.close();
             return true;
         }
         else
@@ -101,7 +101,8 @@ private:
 public:
     NCL_circuit(string inputFileName)
     {
-        ReadInputFile(inputFileName);
+
+        importTruthTable(inputFileName);
 
     }
 
@@ -121,8 +122,8 @@ public:
 
     void print_truthTable()
     {
-        int lines = pow(2,inputs.size());
-        int colums = inputs.size()+outputs.size();
+        int rows = pow(2,inputs.size());
+        int numberOfColums = inputs.size()+outputs.size();
         for(int i=0; i<inputs.size();i++){
             cout<<inputs[i]<<"\t";
         }
@@ -130,8 +131,8 @@ public:
             cout<<outputs[i]<<"\t";
         }
         cout<<endl;
-        for(int i=0; i<lines; i++){
-            for (int j=0; j<colums; j++){
+        for(int i=0; i<rows; i++){
+            for (int j=0; j<numberOfColums; j++){
                 cout<<truthTable[i][j]<<"\t";
             }
             cout<<endl;
@@ -487,7 +488,7 @@ int main(int argc, char *argv[])
     cout << get_current_dir() << endl;
     ncl_circuit.print_attributes();
     ncl_circuit.print_truthTable();
-    ncl_circuit.construct_output_expressions();
+   /* ncl_circuit.construct_output_expressions();
     ncl_circuit.print_output_expressions();
     ncl_circuit.simplify_expressions();
     ncl_circuit.print_output_expressions();
@@ -496,7 +497,7 @@ int main(int argc, char *argv[])
     ncl_circuit.connstruct_hysteresis();
     ncl_circuit.print_hysteresis();
     ncl_circuit.print_module_file();
-    ncl_circuit.print_test_file();
+    ncl_circuit.print_test_file();*/
 
     return 0;
 }

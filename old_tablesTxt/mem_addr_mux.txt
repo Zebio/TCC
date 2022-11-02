@@ -1,0 +1,9 @@
+mem_addr_mux
+4   1
+PH0 Mi  SA  IA  Ad
+0   0   X   X   N 
+0   1   X   1   1
+0   1   X   0   0
+1   0   1   X   1
+1   0   0   X   0
+1   1   X   X   X

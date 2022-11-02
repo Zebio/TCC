@@ -1,0 +1,6 @@
+mem_RW_mux
+2   1
+PH0 MI  RW
+0   0   0
+0   1   1
+1   X   1
