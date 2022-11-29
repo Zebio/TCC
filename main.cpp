@@ -1,18 +1,17 @@
-#include <iostream>
-#include <fstream> //manipulacao de arquivos
-#include <vector>
+#include <iostream> //cout cin
+#include <fstream> //file manipulation
+#include <vector> //arrays
 #include <math.h> //pow
-#include <direct.h>
-#include <cstring>
+#include <cstring> //char* to string
 #include <sstream> //stringstream
 #include <algorithm> //find
-#include <list>
+#include <list> //create automated lists
 #include <string>
-#include <regex>
+#include <regex> //regex_replace(,,);
 
 #ifdef WINDOWS
 #include <direct.h>
-#define GetCurrentDir _getcwd
+#define GetCurrentDir _getcwd //get working directory
 #else
 #include <unistd.h>
 #define GetCurrentDir getcwd
@@ -20,9 +19,17 @@
 
 using namespace std;
 
-string
-removeSpaces(const string& str)
-{
+//get terminal working directory
+string get_current_dir() {
+   char buff[FILENAME_MAX]; //create string buffer to hold path
+   GetCurrentDir( buff, FILENAME_MAX );
+   string current_working_dir(buff);
+   return current_working_dir;
+}
+
+//remove all spaces from a given string
+//useful for the boolean expressions
+string removeSpaces(const string& str) {
     string s(str);
     int j = 0;
     int N = s.size();
@@ -33,6 +40,16 @@ removeSpaces(const string& str)
         }
     }
     s.resize(j);
+    return s;
+}
+
+//convert a char[] to string
+string convertToString(char* a, int size) {
+    int i;
+    string s = "";
+    for (i = 0; i < size; i++) {
+        s = s + a[i];
+    }
     return s;
 }
 
@@ -61,49 +78,50 @@ void tokenize(  const string& str,
     }
 }
 
+//this class is used to implement the recursive-descendent-parser
+//it make possible organize the data to calculate the boolean expression
 class Calculator {
 public:
-    Calculator(const string& expression);
+    Calculator(const string& booleanExpression);
 
-    void next();
-    bool exp();
-    bool term();
-    bool factor();
-    bool toBool(const string& s);
+    void next(); //point to the next char
+    bool exp(); //resolve the expression
+    bool term(); //resolve the terms inside the expression
+    bool toBool(const string& s); //convert string to bool
 
 private:
     list<string> mTokens;
-    string mCurrent;
+    string currentChar;
 };
 
-Calculator::Calculator(const string& expression) {
-    string s = removeSpaces(expression); 
+Calculator::Calculator(const string& booleanExpression) {
+    string s = removeSpaces(booleanExpression); 
     tokenize(s, mTokens);
-    mCurrent = mTokens.front();
+    currentChar = mTokens.front();
 }
 
 void Calculator::next() {
     mTokens.pop_front();
     if (!mTokens.empty()) {
-        mCurrent = mTokens.front();
+        currentChar = mTokens.front();
     } else {
-        mCurrent = string();
+        currentChar = string();
     }
 }
 
 bool Calculator::exp() {
     vector<string> list {"&", ".", "|", "+", "^"};
     bool result = term();
-    while (find(begin(list), end(list), mCurrent) != end(list)) {
-        if (mCurrent == "&" || mCurrent ==".") {
+    while (find(begin(list), end(list), currentChar) != end(list)) {
+        if (currentChar == "&" || currentChar ==".") {
             next();
             result = result && term();
         }
-        else if (mCurrent == "|" || mCurrent =="+") {
+        else if (currentChar == "|" || currentChar =="+") {
             next();
             result =result || term();
         }
-        else if (mCurrent == "^") {
+        else if (currentChar == "^") {
             next();
             result =result ^ term();
         }
@@ -111,49 +129,47 @@ bool Calculator::exp() {
     return result;
 }
 
+//takes care of parenthesis and negations (! ~)
+//else return a boolean result of the term
 bool Calculator::term() {
     bool result;
     string sub_expression;
-    if (mCurrent == "(") {
+    if (currentChar == "(") {
         next();
         int parenthesis =1;
         while (parenthesis!=0) {
-            if(mCurrent=="(") {
+            if(currentChar=="(") {
                 parenthesis ++;
-                sub_expression+=mCurrent;
+                sub_expression+=currentChar;
                 next();
             }
-            if(mCurrent==")") {
+            if(currentChar==")") {
                 parenthesis --;
                 if (parenthesis!=0) {
-                    sub_expression+=mCurrent;
+                    sub_expression+=currentChar;
                 } 
                 next();
             }
             else {
-                sub_expression+=mCurrent;
+                sub_expression+=currentChar;
                 next(); 
             }
         }
         Calculator calculator(sub_expression);
         result = calculator.exp();
     } 
-    else if (mCurrent =="~" || mCurrent == "!"){
+    else if (currentChar =="~" || currentChar == "!"){
         next();
         result = !term();
     }
     else {
-        result = toBool(mCurrent);
+        result = toBool(currentChar);
         next();
     }
     return result;
 }
 
-bool Calculator::factor() {
-    bool result;
-    return result;
-}
-
+//conver string to bool, so it is possible to calculate
 bool Calculator::toBool(const string& s) {
     stringstream ss;
     ss << s;
@@ -167,12 +183,6 @@ bool calculate(string s) {
     return calculator.exp();
 }
 
-string get_current_dir() {
-   char buff[FILENAME_MAX]; //create string buffer to hold path
-   GetCurrentDir( buff, FILENAME_MAX );
-   string current_working_dir(buff);
-   return current_working_dir;
-}
 
 struct SignalExpression{
     string signalName;
@@ -218,402 +228,21 @@ private:
     void constructTruthTableOutputs(char* logicExpression,int output_Index);
     void importTruthTable(string inputFileName);
     void newLogicEquation(string logicEquation);
+    string dont_care_inputs(int index,string minterm);
 
 public:
-    NCL_circuit(char *isTruthTable, string inputString)
-    {
-        if (*isTruthTable =='T') {//import TT and Initialize name
-            try {
-            importTruthTable(inputString);
-            }
-             catch (const char * txtError){
-                cout<<"ERROR: "<<txtError<<endl;
-                throw "Failed to Import truth table";
-            }
-            
-        }
-        else if(*isTruthTable =='L') //or logic equation and Initialize name
-            try {
-                newLogicEquation(inputString);
-            }
-             catch (const char * txtError){
-                cout<<"ERROR: "<<txtError<<endl;
-                throw "Failed to construct new logic equation";
-            }
-            
-    }
-
-    void setName(string _name) {
-        name = _name;
-    }
-
-    void print_attributes()
-    {
-
-        cout<<"LOG: Detected Inputs: ";
-        for(int i=0; i<inputs.size();i++){
-            cout<<inputs[i]<<"  ";
-        }
-        cout<<"\n     Detected Outputs: ";
-        for(int i=0; i<outputs.size();i++){
-            cout<<outputs[i]<<"  ";
-        }
-        cout<<endl;
-    }
-
-    void print_truthTable()
-    {
-        cout<<"LOG: Printing Truth Table"<<endl;
-        int NumberOfRows = pow(2,inputs.size());
-        int numberOfColums = inputs.size()+outputs.size();
-        for(int i=0; i<inputs.size();i++){
-            cout<<inputs[i]<<"\t";
-        }
-        for(int i=0; i<outputs.size();i++){
-            cout<<outputs[i]<<"\t";
-        }
-        cout<<endl;
-        for(int i=0; i<NumberOfRows; i++){
-            for (int j=0; j<numberOfColums; j++){
-                cout<<truthTable[i][j]<<"\t";
-            }
-            cout<<endl;
-        }
-    }
-
-    string dont_care_inputs(int index,string minterm)
-    {
-        string minterm0,minterm1;
-        if (minterm.length()==index)
-            return minterm;
-        if(minterm[index]=='X'){
-            minterm0=minterm;
-            minterm1=minterm;
-            minterm0[index]='0';
-            minterm1[index]='1';
-            minterm0=dont_care_inputs(index+1,minterm0);
-            minterm1=dont_care_inputs(index+1,minterm1);
-            minterm = minterm0;
-            minterm.append(" ");
-            minterm.append(minterm1);
-            return minterm;
-        }
-
-        else {
-            return dont_care_inputs(index+1,minterm);
-        }
-    }
-    void construct_output_expressions()
-    {
-        cout<<"LOG: Constructing output expressions"<<endl;
-        int numberOfInputs  = inputs.size();
-        int numberOfOutputs = outputs.size();
-        SignalExpression outputSignal;
-        for(int output=0; output<numberOfOutputs;output++){
-            bool firstFalse=true;
-            bool firstTrue=true;
-            outputSignal.signalName=outputs[output];
-            outputSignal.falseExpression="";
-            outputSignal.trueExpression ="";
-            string minterm = "";
-
-            for(int line=0; line<pow(2,numberOfInputs); line++){
-                if(truthTable[line][numberOfInputs+output]=='0'){
-                  //  if(!firstFalse){
-                       // minterm.append(" ");
-                   // }
-                    firstFalse = false;
-                    for(int input=0;input<numberOfInputs;input++){
-                        minterm.append(truthTable[line][input]=='1'? "1": truthTable[line][input]=='0'? "0" : "X");
-                    }
-                    minterm=dont_care_inputs(0,minterm);
-                    minterm.append(" ");
-                    outputSignal.falseExpression.append(minterm);
-                    minterm = "";
-                }
-                if(truthTable[line][numberOfInputs+output]=='1'){
-                  //  if(!firstTrue){
-                       // minterm.append(" ");
-                  //  }
-                    firstTrue = false;
-                    for(int input=0;input<numberOfInputs;input++){
-                        minterm.append(truthTable[line][input]=='1'? "1": truthTable[line][input]=='0'? "0" : "X");
-                    }
-                    minterm=dont_care_inputs(0,minterm);
-                    minterm.append(" ");
-                    outputSignal.trueExpression.append(minterm);
-                    minterm="";
-                }
-
-            }
-            if (!outputSignal.falseExpression.empty())
-                outputSignal.falseExpression.pop_back();
-            if (!outputSignal.trueExpression.empty())
-                outputSignal.trueExpression.pop_back();
-
-            outputExpressions.push_back(outputSignal);
-        }
-        print_output_expressions();
-    }
-
-    void print_output_expressions()
-    {
-        cout<<"LOG: Printing Output Expressions"<<endl;
-        for(int output=0; output<outputExpressions.size();output++){
-            cout<<"\tOuput Name: "<<outputExpressions[output].signalName<<endl;
-            cout<<"\tFalse Expression: "<<outputExpressions[output].falseExpression<<endl;
-            cout<<"\tTrue  Expression: "<<outputExpressions[output].trueExpression<<endl<<endl;
-        }
-    }
-
-    void simplify_expressions()
-    {
-        cout<<"LOG: Simplifying Output Expressions"<<endl;
-        ofstream expressionFile;
-        ifstream expressionFileOutput;
-        string buffer;
-        string script = "python3 ";
-        script.append(get_current_dir());
-        script.append("\\Kmap.py");
-        for(int output=0; output<outputExpressions.size();output++){
-            expressionFile.open("expression_file.txt");
-            expressionFile<<outputExpressions[output].falseExpression;
-            expressionFile.close();
-            
-            if (outputExpressions[output].falseExpression != "")
-            {
-                system(script.c_str());
-
-                expressionFileOutput.open("expression_file_output.txt");
-                getline(expressionFileOutput,buffer);
-                expressionFileOutput.close();
-                outputExpressions[output].falseExpression=buffer;
-            }
-
-
-            expressionFile.open("expression_file.txt");
-            expressionFile<<outputExpressions[output].trueExpression;
-            expressionFile.close();
-            
-
-            if (outputExpressions[output].trueExpression != "")
-            {
-                system(script.c_str());
-
-                expressionFileOutput.open("expression_file_output.txt");
-                getline(expressionFileOutput,buffer);
-                expressionFileOutput.close();
-                outputExpressions[output].trueExpression=buffer;
-            }
-        }
-    print_output_expressions();
-    }
-
-
-    void convert_to_named(){
-        cout<<"LOG: Converting Output Expressions into Verilog Format"<<endl;
-        char * char_array_buffer;
-        int size;
-        int counter;
-        bool first;
-        string buffer;
-        for(int output=0; output<outputExpressions.size();output++){
-            int i=0;
-            while (i<2){
-                first=true;
-                counter=0;
-                if(i==0){
-                    buffer=outputExpressions[output].falseExpression;
-                    size=outputExpressions[output].falseExpression.length();
-                }         
-                else {
-                    buffer=outputExpressions[output].trueExpression;
-                    size=outputExpressions[output].trueExpression.length();
-                }
-                char_array_buffer = new char[size];
-                strcpy(char_array_buffer,buffer.c_str());
-                buffer = "";
-                buffer = outputExpressions[output].signalName;
-                if (i==0)
-                    buffer.append("_f= (");
-                else
-                    buffer.append("_t= (");
-                for (int index=0; index<size;index++){
-                    switch (char_array_buffer[index])         
-                    {
-                    case '0':
-                        if(!first)
-                            buffer.append(" & ");
-                        else
-                            first=false;
-                        buffer.append(inputs[counter]);
-                        buffer.append("_f");
-                        counter++;
-                        break;
-
-                    case '1':
-                        if(!first)
-                            buffer.append(" & ");    
-                        else
-                            first = false;
-                        buffer.append(inputs[counter]);
-                        buffer.append("_t");
-                        counter++;
-                        break;
-
-                    case ' ':
-                        counter=0;
-                        buffer.append(") | (");
-                        first=true;
-                        break;
-
-                    default:
-                        counter++;
-                        break;
-                    } 
-                }
-            buffer.append(")");
-            if(i==0)
-                outputExpressions[output].falseExpression=buffer;
-            else
-                outputExpressions[output].trueExpression=buffer;
-            i++;    
-            delete[] char_array_buffer;
-            }
-            
-        }
-    print_output_expressions();
-    }
-    void construct_hysteresis()
-    {
-        cout<<"LOG: Constructing Hysteresis Signal"<<endl;
-        for(int i=0;i<inputs.size();i++)
-        {
-            hysteresys.append(inputs[i]);
-            hysteresys.append("_t | "); 
-            hysteresys.append(inputs[i]);
-            hysteresys.append("_f");
-            if(i+1<inputs.size())
-                hysteresys.append(" | ");
-        }
-    }
-
-    void print_hysteresis()
-    {
-        cout<<"LOG: Printing Histeresys Signal"<<endl;
-        cout<<"\tHisteresys: "<<hysteresys<<endl;
-    }
-
-    void print_module_file()
-    {
-        cout<<"LOG: Printing Verilog Module File"<<endl;
-        mkdir("Output_Files");
-        string filePath="Output_Files\\";
-        filePath.append(name);
-        filePath.append(".v");
-        ofstream verilog_module;
-        cout<<"\tVerilog Module File Path: "<<filePath<<endl;
-        verilog_module.open(filePath);
-        verilog_module << "module "<<name<< "(\n\tinput ";
-        for(int i=0;i<inputs.size();i++) {
-            verilog_module<<inputs[i]<<"_t, "<<inputs[i]<<"_f, ";
-        }
-        verilog_module << "\n\toutput ";
-        for(int i=0;i<outputs.size();i++) {
-            verilog_module<<outputs[i]<<"_t, "<<outputs[i]<<"_f";
-            if(i+1<outputs.size())
-                verilog_module<<", ";
-        }
-        verilog_module<<");\n";
-        verilog_module<<"\n\twire hysteresis;";
-        verilog_module<<"\n\tassign hysteresis = "<<hysteresys<<";\n\n";
-
-        for(int output=0; output<outputExpressions.size();output++){
-            verilog_module<<"\tassign "<<outputExpressions[output].falseExpression<<" | (hysteresis & "<<outputs[output]<<"_f);\n";
-            verilog_module<<"\tassign "<<outputExpressions[output].trueExpression <<" | (hysteresis & "<<outputs[output]<<"_t);\n";
-        }
-        verilog_module <<"\nendmodule "<<endl;
-        verilog_module.close();
-    }
-    void print_test_file()
-    {
-        cout<<"LOG: Printing Verilog Test File"<<endl;
-        string filePath="Output_Files\\";
-        filePath.append(name);
-        filePath.append("_tb.v");
-        ofstream verilog_module;
-        cout<<"\tVerilog Module Test File Path: "<<filePath<<endl;
-
-        verilog_module.open(filePath);
-
-        verilog_module << "`timescale 1ns/1ps\n";
-        verilog_module << "module "<<name<<"_tb();\n"; 
-        verilog_module << "\treg ";
-        for(int i=0;i<inputs.size();i++)
-        {
-            verilog_module<<inputs[i]<<"_t, "<<inputs[i]<<"_f";
-            if(i+1<inputs.size())
-                verilog_module<<", ";
-        }
-        verilog_module << ";\n";
-        verilog_module << "\twire ";
-        for(int i=0;i<outputs.size();i++)
-        {
-            verilog_module<<outputs[i]<<"_t, "<<outputs[i]<<"_f";
-            if(i+1<outputs.size())
-                verilog_module<<", ";
-        }
-        verilog_module << ";\n";
-        verilog_module << "\n\t"<<name<<" dut(";
-
-        for(int i=0;i<inputs.size();i++)
-        {
-            verilog_module<<"\n\t\t"<<inputs[i]<<"_t, "<<inputs[i]<<"_f,";
-        }
-        for(int i=0;i<outputs.size();i++)
-        {
-            verilog_module<<"\n\t\t"<<outputs[i]<<"_t, "<<outputs[i]<<"_f";
-            if(i+1<outputs.size())
-                verilog_module<<", ";
-        }
-        verilog_module << "\n\t);\n";
-        verilog_module <<"\n\ttask null_state(); begin\n";
-        for(int i=0;i<inputs.size();i++)
-        {
-            verilog_module<<"\t\t"<<inputs[i]<<"_t=0; "<<inputs[i]<<"_f=0; //"<<inputs[i]<<"==NULL\n";
-        }
-        verilog_module <<"\t\tend";
-        verilog_module <<"\n\tendtask";
-        verilog_module <<"\n\n\tinitial begin";
-        for(int line=0; line<pow(2,inputs.size()); line++){
-            verilog_module <<"\n\n\t\tnull_state();";
-            verilog_module <<"\n\t\t#10;";
-            verilog_module<<"\n\n\t\t//Testing Truth Table line "<<line;
-            for(int input=0; input<inputs.size(); input++){
-                if(truthTable[line][input]==1){
-                    verilog_module<<"\n\t\t"<<inputs[input]<<"_t=1; ";
-                    verilog_module<<inputs[input]<<"_f=0;";
-                    verilog_module<<"// "<<inputs[input]<<"==1";
-                } 
-                else {
-                    verilog_module<<"\n\t\t"<<inputs[input]<<"_t=0; ";
-                    verilog_module<<inputs[input]<<"_f=1;";
-                    verilog_module<<"// "<<inputs[input]<<"==0";
-                }
-            }
-            verilog_module<<"\n\t\t#10;";
-            for(int output=0; output<outputs.size();output++){
-                verilog_module<<"\n\t\tif("<<outputs[output]<<"_t=="<<truthTable[line][inputs.size()+output];
-                verilog_module<<" && " <<outputs[output]<<"_f=="<<!(truthTable[line][inputs.size()+output]);
-                verilog_module<<")";
-                verilog_module<<"\n\t\t\t$display(\"CORRECT BEHAVIOR: OUTPUT: "<<outputs[output]<<" LINE "<<line<<"\");";
-                verilog_module<<"\n\t\telse";
-                verilog_module<<"\n\t\t\t$error(\"INCORRECT BEHAVIOR: OUTPUT: "<<outputs[output]<<" LINE "<<line<<"\");";
-            }
-        }
-        verilog_module<<"\n\tend";
-        verilog_module<<"\nendmodule ";
-    }    
+    NCL_circuit(char *mode, string inputString);
+    void setName(string _name);
+    void print_attributes();
+    void print_truthTable();
+    void construct_output_expressions();
+    void print_output_expressions();
+    void simplify_expressions();
+    void convert_to_named();
+    void construct_hysteresis();
+    void print_hysteresis();
+    void print_module_file();
+    void print_test_file();
 };
 
 void NCL_circuit::allocateTruthTable() {   
@@ -640,9 +269,11 @@ void NCL_circuit::allocateTruthTable() {
     print_truthTable();
     }
 
+//initialize the input collums of the truth table
 void NCL_circuit::constructTruthTableInputs() {
     cout<<"LOG: Initializing Truth Table Input Stimulus "<<endl;
-    int numberOfRows  = pow(2,inputs.size()); //the number of the numberOfRows of the truth table = n_inputs^2
+    //the number of the numberOfRows of the truth table = n_inputs^2
+    int numberOfRows  = pow(2,inputs.size()); 
     int * binaryNumber;
     binaryNumber = new int [inputs.size()];
     for(int line=0; line<numberOfRows;line++) {
@@ -665,16 +296,21 @@ void NCL_circuit::constructTruthTableInputs() {
 
 }
 
-void NCL_circuit::constructTruthTableOutputs(char* logicExpression,int output_Index)
+//calculate the output collums of the truth table
+void NCL_circuit::constructTruthTableOutputs(
+       char* logicExpression,int output_Index)
 {
     cout<<"LOG: Logic Expression: "<<logicExpression<<endl;
     char* token;
     string stimulus,temp,outputName;
     bool result;
-    token = strtok (logicExpression,"="); //get the output (the string before '=')
+    //get the output (the string before '=')
+    token = strtok (logicExpression,"=");
     temp=token;
-    token = strtok (NULL,";"); //get the output (the string before ';')
-    int numberOfRows  = pow(2,inputs.size()); //the number of the numberOfRows of the truth table = n_inputs^2
+    //get the expression (the string after '=' and before ';')
+    token = strtok (NULL,";");
+    //the number of the numberOfRows of the truth table = n_inputs^2
+    int numberOfRows  = pow(2,inputs.size()); 
     for(int line=0;line<numberOfRows;line++) {
         stimulus=token;
         stimulus=removeSpaces(stimulus);
@@ -685,11 +321,10 @@ void NCL_circuit::constructTruthTableOutputs(char* logicExpression,int output_In
             stimulus = regex_replace(stimulus, regex(inputs[input]), temp);
         }
         result=calculate(stimulus);
-        cout<<outputs[output_Index]<<" = "<<stimulus<<" = "<< result<<endl; //outputs[]
+        cout<<outputs[output_Index]<<" = "<<stimulus<<" = "<< result<<endl;
         truthTable[line][inputs.size()+output_Index]= result==1? '1': '0';
     }
     print_truthTable();
-
 }
 
 void NCL_circuit::importTruthTable(string inputFileName)
@@ -700,11 +335,11 @@ void NCL_circuit::importTruthTable(string inputFileName)
     cout<<"Openng File: \""<<inputFileName<<"\""<<endl;
     fileToRead.open(inputFileName); //try to open the file
     if (fileToRead.is_open()) //if the file is oppened
-    {
-        getline(fileToRead,lineBuffer); //Read the first line of the file and puts in the buffer
+    {   //Read the first line of the file and puts in the buffer
+        getline(fileToRead,lineBuffer); 
         stringstream ss(lineBuffer); //convert the buffer to a stringstream 
         string token="a"; //initialize the token 
-        while(token!="") //reads all tokens(inputs) until "" -see truth table format
+        while(token!="") //reads all tokens(inputs) until ""
         {
             getline(ss,token, CSV_DELIMITER);
             if(token !="") 
@@ -715,16 +350,12 @@ void NCL_circuit::importTruthTable(string inputFileName)
             getline(ss,token,CSV_DELIMITER);
             outputs.push_back(token); //push back in the vector each output
         }
-
-        
         try {
         allocateTruthTable();
         }
         catch (const char * txtError){
             cout<<"ERROR: "<<txtError<<endl;
         }
-
-
         int row=0;
         while (getline(fileToRead,lineBuffer)) //read a line in the file
         {
@@ -767,12 +398,9 @@ void NCL_circuit::newLogicEquation(string logicEquation)
             temp="";
         }
     }
-
     cout<<"Logic Equations Detected:"<<endl;
-
     for(int i=0; i<Equation.size();i++) {
         cout<<"\t"<<Equation[i]<<endl;
-
     }
     for(int i=0; i<Equation.size();i++) {
         cout<<"LOG: Reading Logic Equation: "<<Equation[i]<<endl;
@@ -789,49 +417,415 @@ void NCL_circuit::newLogicEquation(string logicEquation)
             }
         }
     }
-
-
     print_attributes();
-
     try {
         allocateTruthTable();
-        }
+    }
         catch (const char * txtError){
             cout<<"ERROR: "<<txtError<<endl;
-        }
-
+    }
     try {
         constructTruthTableInputs();
-        }
+    }
         catch (const char * txtError){
             cout<<"ERROR: "<<txtError<<endl;
-        }
+    }
 
     for(int i=0; i<Equation.size();i++) {
-    char c[Equation[i].size() + 1];
-    strcpy(c, Equation[i].c_str());
-    try {
-        constructTruthTableOutputs(c,i);
+        char c[Equation[i].size() + 1];
+        strcpy(c, Equation[i].c_str());
+        try {
+            constructTruthTableOutputs(c,i);
         }
-        catch (const char * txtError){
-            cout<<"ERROR: "<<txtError<<endl;
+            catch (const char * txtError){
+                cout<<"ERROR: "<<txtError<<endl;
         }
     }
 }
 
-
-
-
-string convertToString(char* a, int size)
+//NCL class constructor
+NCL_circuit::NCL_circuit(char *mode, string inputString)
 {
-    int i;
-    string s = "";
-    for (i = 0; i < size; i++) {
-        s = s + a[i];
+    if (*mode =='T') {//import Truth Table
+        try {
+        importTruthTable(inputString);
+        }
+            catch (const char * txtError){
+            cout<<"ERROR: "<<txtError<<endl;
+            throw "Failed to Import truth table";
+        }
     }
-    return s;
+    else if(*mode =='L') { //Read Logic Equation
+        try {
+            newLogicEquation(inputString);
+        }
+            catch (const char * txtError){
+            cout<<"ERROR: "<<txtError<<endl;
+            throw "Failed to construct new logic equation";
+        }
+    }
 }
 
+void NCL_circuit::setName(string _name) {
+    name = _name;
+}
+
+//print inputs and outputs
+void NCL_circuit::print_attributes()
+{
+    cout<<"LOG: Detected Inputs: ";
+    for(int i=0; i<inputs.size();i++){
+        cout<<inputs[i]<<"  ";
+    }
+    cout<<"\n     Detected Outputs: ";
+    for(int i=0; i<outputs.size();i++){
+        cout<<outputs[i]<<"  ";
+    }
+    cout<<endl;
+}
+
+//prints the truth table
+void NCL_circuit::print_truthTable()
+{
+    cout<<"LOG: Printing Truth Table"<<endl;
+    int NumberOfRows = pow(2,inputs.size());
+    int numberOfColums = inputs.size()+outputs.size();
+    for(int i=0; i<inputs.size();i++){
+        cout<<inputs[i]<<"\t";
+    }
+    for(int i=0; i<outputs.size();i++){
+        cout<<outputs[i]<<"\t";
+    }
+    cout<<endl;
+    for(int i=0; i<NumberOfRows; i++){
+        for (int j=0; j<numberOfColums; j++){
+            cout<<truthTable[i][j]<<"\t";
+        }
+        cout<<endl;
+    }
+}
+
+string NCL_circuit::dont_care_inputs(int index,string minterm)
+{
+    string minterm0,minterm1;
+    if (minterm.length()==index)
+        return minterm;
+    if(minterm[index]=='X'){
+        minterm0=minterm;
+        minterm1=minterm;
+        minterm0[index]='0';
+        minterm1[index]='1';
+        minterm0=dont_care_inputs(index+1,minterm0);
+        minterm1=dont_care_inputs(index+1,minterm1);
+        minterm = minterm0;
+        minterm.append(" ");
+        minterm.append(minterm1);
+        return minterm;
+    }
+
+    else {
+        return dont_care_inputs(index+1,minterm);
+    }
+}
+
+void NCL_circuit::construct_output_expressions()
+{
+    cout<<"LOG: Constructing output expressions"<<endl;
+    int numberOfInputs  = inputs.size();
+    int numberOfOutputs = outputs.size();
+    SignalExpression outputSignal;
+    for(int output=0; output<numberOfOutputs;output++){
+        bool firstFalse=true;
+        bool firstTrue=true;
+        outputSignal.signalName=outputs[output];
+        outputSignal.falseExpression="";
+        outputSignal.trueExpression ="";
+        string minterm = "";
+        for(int line=0; line<pow(2,numberOfInputs); line++){
+            if(truthTable[line][numberOfInputs+output]=='0'){
+                firstFalse = false;
+                for(int input=0;input<numberOfInputs;input++){
+                    minterm.append(truthTable[line][input]=='1'? "1": truthTable[line][input]=='0'? "0" : "X");
+                }
+                minterm=dont_care_inputs(0,minterm);
+                minterm.append(" ");
+                outputSignal.falseExpression.append(minterm);
+                minterm = "";
+            }
+            if(truthTable[line][numberOfInputs+output]=='1'){
+                firstTrue = false;
+                for(int input=0;input<numberOfInputs;input++){
+                    minterm.append(truthTable[line][input]=='1'? "1": truthTable[line][input]=='0'? "0" : "X");
+                }
+                minterm=dont_care_inputs(0,minterm);
+                minterm.append(" ");
+                outputSignal.trueExpression.append(minterm);
+                minterm="";
+            }
+
+        }
+        if (!outputSignal.falseExpression.empty())
+            outputSignal.falseExpression.pop_back();
+        if (!outputSignal.trueExpression.empty())
+            outputSignal.trueExpression.pop_back();
+
+        outputExpressions.push_back(outputSignal);
+    }
+    print_output_expressions();
+}
+
+void NCL_circuit::print_output_expressions(){
+    cout<<"LOG: Printing Output Expressions"<<endl;
+    for(int output=0; output<outputExpressions.size();output++){
+        cout<<"\tOuput Name: "<<outputExpressions[output].signalName<<endl;
+        cout<<"\tFalse Expression: "<<outputExpressions[output].falseExpression<<endl;
+        cout<<"\tTrue  Expression: "<<outputExpressions[output].trueExpression<<endl<<endl;
+    }
+}
+
+void NCL_circuit::simplify_expressions() {
+    cout<<"LOG: Simplifying Output Expressions"<<endl;
+    ofstream expressionFile;
+    ifstream expressionFileOutput;
+    string buffer;
+    string script = "python3 ";
+    script.append(get_current_dir());
+    script.append("\\Kmap.py");
+    for(int output=0; output<outputExpressions.size();output++){
+        expressionFile.open("expression_file.txt");
+        expressionFile<<outputExpressions[output].falseExpression;
+        expressionFile.close();
+        
+        if (outputExpressions[output].falseExpression != "")
+        {
+            system(script.c_str());
+
+            expressionFileOutput.open("expression_file_output.txt");
+            getline(expressionFileOutput,buffer);
+            expressionFileOutput.close();
+            outputExpressions[output].falseExpression=buffer;
+        }
+        expressionFile.open("expression_file.txt");
+        expressionFile<<outputExpressions[output].trueExpression;
+        expressionFile.close();
+        if (outputExpressions[output].trueExpression != "")
+        {
+            system(script.c_str());
+
+            expressionFileOutput.open("expression_file_output.txt");
+            getline(expressionFileOutput,buffer);
+            expressionFileOutput.close();
+            outputExpressions[output].trueExpression=buffer;
+        }
+    }
+print_output_expressions();
+}
+
+void NCL_circuit::convert_to_named(){
+    cout<<"LOG: Converting Output Expressions into Verilog Format"<<endl;
+    char * char_array_buffer;
+    int size;
+    int counter;
+    bool first;
+    string buffer;
+    for(int output=0; output<outputExpressions.size();output++){
+        int i=0;
+        while (i<2){
+            first=true;
+            counter=0;
+            if(i==0){
+                buffer=outputExpressions[output].falseExpression;
+                size=outputExpressions[output].falseExpression.length();
+            }         
+            else {
+                buffer=outputExpressions[output].trueExpression;
+                size=outputExpressions[output].trueExpression.length();
+            }
+            char_array_buffer = new char[size];
+            strcpy(char_array_buffer,buffer.c_str());
+            buffer = "";
+            buffer = outputExpressions[output].signalName;
+            if (i==0)
+                buffer.append("_f= (");
+            else
+                buffer.append("_t= (");
+            for (int index=0; index<size;index++){
+                switch (char_array_buffer[index])         
+                {
+                case '0':
+                    if(!first)
+                        buffer.append(" & ");
+                    else
+                        first=false;
+                    buffer.append(inputs[counter]);
+                    buffer.append("_f");
+                    counter++;
+                    break;
+
+                case '1':
+                    if(!first)
+                        buffer.append(" & ");    
+                    else
+                        first = false;
+                    buffer.append(inputs[counter]);
+                    buffer.append("_t");
+                    counter++;
+                    break;
+
+                case ' ':
+                    counter=0;
+                    buffer.append(") | (");
+                    first=true;
+                    break;
+
+                default:
+                    counter++;
+                    break;
+                } 
+            }
+        buffer.append(")");
+        if(i==0)
+            outputExpressions[output].falseExpression=buffer;
+        else
+            outputExpressions[output].trueExpression=buffer;
+        i++;    
+        delete[] char_array_buffer;
+        }
+    }
+print_output_expressions();
+}
+
+void NCL_circuit::construct_hysteresis()
+{
+    cout<<"LOG: Constructing Hysteresis Signal"<<endl;
+    for(int i=0;i<inputs.size();i++)
+    {
+        hysteresys.append(inputs[i]);
+        hysteresys.append("_t | "); 
+        hysteresys.append(inputs[i]);
+        hysteresys.append("_f");
+        if(i+1<inputs.size())
+            hysteresys.append(" | ");
+    }
+}
+
+void NCL_circuit::print_hysteresis()
+{
+    cout<<"LOG: Printing Histeresys Signal"<<endl;
+    cout<<"\tHisteresys: "<<hysteresys<<endl;
+}
+
+void NCL_circuit::print_module_file()
+{
+    cout<<"LOG: Printing Verilog Module File"<<endl;
+    mkdir("Output_Files");
+    string filePath="Output_Files\\";
+    filePath.append(name);
+    filePath.append(".v");
+    ofstream verilog_module;
+    cout<<"\tVerilog Module File Path: "<<filePath<<endl;
+    verilog_module.open(filePath);
+    verilog_module << "module "<<name<< "(\n\tinput ";
+    for(int i=0;i<inputs.size();i++) {
+        verilog_module<<inputs[i]<<"_t, "<<inputs[i]<<"_f, ";
+    }
+    verilog_module << "\n\toutput ";
+    for(int i=0;i<outputs.size();i++) {
+        verilog_module<<outputs[i]<<"_t, "<<outputs[i]<<"_f";
+        if(i+1<outputs.size())
+            verilog_module<<", ";
+    }
+    verilog_module<<");\n";
+    verilog_module<<"\n\twire hysteresis;";
+    verilog_module<<"\n\tassign hysteresis = "<<hysteresys<<";\n\n";
+
+    for(int output=0; output<outputExpressions.size();output++){
+        verilog_module<<"\tassign "<<outputExpressions[output].falseExpression<<" | (hysteresis & "<<outputs[output]<<"_f);\n";
+        verilog_module<<"\tassign "<<outputExpressions[output].trueExpression <<" | (hysteresis & "<<outputs[output]<<"_t);\n";
+    }
+    verilog_module <<"\nendmodule "<<endl;
+    verilog_module.close();
+}
+
+void NCL_circuit::print_test_file()
+{
+    cout<<"LOG: Printing Verilog Test File"<<endl;
+    string filePath="Output_Files\\";
+    filePath.append(name);
+    filePath.append("_tb.v");
+    ofstream verilog_module;
+    cout<<"\tVerilog Module Test File Path: "<<filePath<<endl;
+
+    verilog_module.open(filePath);
+
+    verilog_module << "`timescale 1ns/1ps\n";
+    verilog_module << "module "<<name<<"_tb();\n"; 
+    verilog_module << "\treg ";
+    for(int i=0;i<inputs.size();i++)
+    {
+        verilog_module<<inputs[i]<<"_t, "<<inputs[i]<<"_f";
+        if(i+1<inputs.size())
+            verilog_module<<", ";
+    }
+    verilog_module << ";\n";
+    verilog_module << "\twire ";
+    for(int i=0;i<outputs.size();i++)
+    {
+        verilog_module<<outputs[i]<<"_t, "<<outputs[i]<<"_f";
+        if(i+1<outputs.size())
+            verilog_module<<", ";
+    }
+    verilog_module << ";\n";
+    verilog_module << "\n\t"<<name<<" dut(";
+
+    for(int i=0;i<inputs.size();i++)
+    {
+        verilog_module<<"\n\t\t"<<inputs[i]<<"_t, "<<inputs[i]<<"_f,";
+    }
+    for(int i=0;i<outputs.size();i++)
+    {
+        verilog_module<<"\n\t\t"<<outputs[i]<<"_t, "<<outputs[i]<<"_f";
+        if(i+1<outputs.size())
+            verilog_module<<", ";
+    }
+    verilog_module << "\n\t);\n";
+    verilog_module <<"\n\ttask null_state(); begin\n";
+    for(int i=0;i<inputs.size();i++)
+    {
+        verilog_module<<"\t\t"<<inputs[i]<<"_t=0; "<<inputs[i]<<"_f=0; //"<<inputs[i]<<"==NULL\n";
+    }
+    verilog_module <<"\t\tend";
+    verilog_module <<"\n\tendtask";
+    verilog_module <<"\n\n\tinitial begin";
+    for(int line=0; line<pow(2,inputs.size()); line++){
+        verilog_module <<"\n\n\t\tnull_state();";
+        verilog_module <<"\n\t\t#10;";
+        verilog_module<<"\n\n\t\t//Testing Truth Table line "<<line;
+        for(int input=0; input<inputs.size(); input++){
+            if(truthTable[line][input]==1){
+                verilog_module<<"\n\t\t"<<inputs[input]<<"_t=1; ";
+                verilog_module<<inputs[input]<<"_f=0;";
+                verilog_module<<"// "<<inputs[input]<<"==1";
+            } 
+            else {
+                verilog_module<<"\n\t\t"<<inputs[input]<<"_t=0; ";
+                verilog_module<<inputs[input]<<"_f=1;";
+                verilog_module<<"// "<<inputs[input]<<"==0";
+            }
+        }
+        verilog_module<<"\n\t\t#10;";
+        for(int output=0; output<outputs.size();output++){
+            verilog_module<<"\n\t\tif("<<outputs[output]<<"_t=="<<truthTable[line][inputs.size()+output];
+            verilog_module<<" && " <<outputs[output]<<"_f=="<<!(truthTable[line][inputs.size()+output]);
+            verilog_module<<")";
+            verilog_module<<"\n\t\t\t$display(\"CORRECT BEHAVIOR: OUTPUT: "<<outputs[output]<<" LINE "<<line<<"\");";
+            verilog_module<<"\n\t\telse";
+            verilog_module<<"\n\t\t\t$error(\"INCORRECT BEHAVIOR: OUTPUT: "<<outputs[output]<<" LINE "<<line<<"\");";
+        }
+    }
+    verilog_module<<"\n\tend";
+    verilog_module<<"\nendmodule ";
+}    
 
 int main(int argc, char *argv[])
 {
