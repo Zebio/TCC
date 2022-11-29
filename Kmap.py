@@ -43,7 +43,7 @@ class Minterms(object):
         #add the string character by character
         for i in range(0,l-1):
             Final_string = Final_string + string2[i]
-        print(' Result(* = Not Care): ' + Final_string)
+        print('\tResult (* = Not Care): ' + Final_string +'\n')
         my_file_output = open("expression_file_output.txt", "w")
         my_file_output.write(Final_string)
         my_file_output.close()
@@ -54,8 +54,8 @@ if __name__ == "__main__":
     data = my_file.read()
     str_terms = data.split(" ")
     #str_terms = ["010", "011", "101", "111"]
-    print('\n Python script to simplify boolean expressions')
-    print(' Expression: ' , str_terms)
+    print('\tKarnaugh Map Solver to Simplify Boolean Expressions')
+    print('\tExpression: ' , str_terms)
     my_file.close()
     terms_not_care = []
     t_minterms = [Term(term) for term in str_terms]
